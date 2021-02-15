@@ -4,6 +4,7 @@ namespace ASControllingReport\Core\Api;
 
 // use ASDispositionControl\Core\Utilities\MailServiceHelper;
 use Shopware\Core\Framework\Context;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Shopware\Core\Framework\Routing\Annotation\RouteScope;
 use Symfony\Component\HttpFoundation\Response;
@@ -34,6 +35,10 @@ class ASControllingReportController extends AbstractController
      */
     public function dummyRoute(Context $context): ?Response
     {
+        /** @var EntityRepositoryInterface $costCentresRepository */
+        $costCentresRepository = $this->container->get('as_controlling_report_cost_centres.repository');
+        $data[] = ['costCentreId' => '50528002'];
+        $costCentresRepository->create($data,Context::createDefaultContext());
         
         return new Response('',Response::HTTP_NO_CONTENT);
     }

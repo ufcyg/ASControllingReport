@@ -13,6 +13,10 @@
             </call>
         </service>
 
+        <service id="ASControllingReport\Core\Content\CostCentre\ASControllingCostCentreDefinition">
+            <tag name="shopware.entity.definition" entity="as_controlling_report_cost_centres" />
+        </service>
+
         <service id="ASControllingReport\ScheduledTask\ControllingReportTask">
             <tag name="shopware.scheduled.task" />
         </service>
