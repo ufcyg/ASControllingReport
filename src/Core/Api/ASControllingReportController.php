@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace ASDispositionControl\Core\Api;
+namespace ASControllingReport\Core\Api;
 
-use ASDispositionControl\Core\Utilities\MailServiceHelper;
+// use ASDispositionControl\Core\Utilities\MailServiceHelper;
 use Shopware\Core\Framework\Context;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Shopware\Core\Framework\Routing\Annotation\RouteScope;
@@ -17,14 +17,14 @@ class ASControllingReportController extends AbstractController
 {
     /** @var SystemConfigService $systemConfigService */
     private $systemConfigService;
-    /** @var MailServiceHelper $mailServiceHelper */
-    private $mailServiceHelper;
+    // /** @var MailServiceHelper $mailServiceHelper */
+    // private $mailServiceHelper;
     
-    public function __construct(SystemConfigService $systemConfigService,
-                                MailServiceHelper $mailServiceHelper)
+    public function __construct(SystemConfigService $systemConfigService/*,
+                                MailServiceHelper $mailServiceHelper*/)
     {
         $this->systemConfigService = $systemConfigService;
-        $this->mailServiceHelper = $mailServiceHelper;
+        // $this->mailServiceHelper = $mailServiceHelper;
     }
 
     /**
