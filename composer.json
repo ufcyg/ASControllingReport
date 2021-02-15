@@ -1,8 +1,14 @@
 {
-  "name": "swag/plugin-skeleton",
-  "description": "Skeleton plugin",
+  "name": "as/controlling-report",
+  "description": "Report functionality of monthly ordered materials for controlling",
   "type": "shopware-platform-plugin",
-  "license": "MIT",
+  "version": "v0.1.1",
+  "license": "proprietary",
+  "authors": [
+    {
+        "name": "A&S PMO"
+    }
+  ],
   "autoload": {
     "psr-4": {
       "ASControllingReport\\": "src/"
@@ -11,8 +17,8 @@
   "extra": {
     "shopware-plugin-class": "ASControllingReport\\ASControllingReport",
     "label": {
-      "de-DE": "Skeleton plugin",
-      "en-GB": "Skeleton plugin"
+      "de-DE": "Erstellt monatlich einen Bericht über die Materialströme und übermittelt diese an das Controlling",
+      "en-GB": "Creates monthly reports of material throughput and destination of materials for controlling"
     }
   }
 }
