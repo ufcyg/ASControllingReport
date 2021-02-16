@@ -2,7 +2,7 @@
   "name": "as/controlling-report",
   "description": "Report functionality of monthly ordered materials for controlling",
   "type": "shopware-platform-plugin",
-  "version": "v0.1.2",
+  "version": "v0.1.3",
   "license": "proprietary",
   "authors": [
     {
