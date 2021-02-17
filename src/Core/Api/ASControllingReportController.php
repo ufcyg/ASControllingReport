@@ -2,13 +2,10 @@
 
 namespace ASControllingReport\Core\Api;
 
-// use ASDispositionControl\Core\Utilities\MailServiceHelper;
-
+use ASControllingReport\Core\Helper\MailServiceHelper;
 use ASControllingReport\Core\Content\CostCentre\ASControllingCostCentreEntity;
 use DateInterval;
 use DateTime;
-use OpenApiFixures\Customer;
-use Shopware\Core\Checkout\Customer\Aggregate\CustomerGroup\CustomerGroupEntity;
 use Shopware\Core\Checkout\Customer\CustomerEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderAddress\OrderAddressEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderCustomer\OrderCustomerEntity;
@@ -32,16 +29,19 @@ use Shopware\Core\System\SystemConfig\SystemConfigService;
  */
 class ASControllingReportController extends AbstractController
 {
+    /** @var string $path */
+    private $path;
     /** @var SystemConfigService $systemConfigService */
     private $systemConfigService;
-    // /** @var MailServiceHelper $mailServiceHelper */
-    // private $mailServiceHelper;
+    /** @var MailServiceHelper $mailServiceHelper */
+    private $mailServiceHelper;
     
-    public function __construct(SystemConfigService $systemConfigService/*,
-                                MailServiceHelper $mailServiceHelper*/)
+    public function __construct(SystemConfigService $systemConfigService,
+                                MailServiceHelper $mailServiceHelper)
     {
         $this->systemConfigService = $systemConfigService;
-        // $this->mailServiceHelper = $mailServiceHelper;
+        $this->mailServiceHelper = $mailServiceHelper;
+        $this->path = '../custom/plugins/ASControllingReport/Reports/';
     }
 
     /**
@@ -92,12 +92,18 @@ class ASControllingReportController extends AbstractController
     }
 
     /**
-     * @Route("/api/v{version}/_action/as-controlling-report/generateReport", name="api.custom.as_controlling_report.generateReport", methods={"POST"})
+     * @Route("/api/v{version}/_action/as-controlling-report/sendReport", name="api.custom.as_controlling_report.sendReport", methods={"POST"})
      * @param Context $context;
      * @return Response
      */
-    public function generateReport(Context $context): ?Response
+    public function sendReport(Context $context): ?Response
     {
+        $this->generateReport();
+        return new Response('',Response::HTTP_NO_CONTENT);
+    }
+    private function generateReport()
+    {
+        $reportEntries = null;
         //load orders
         $orderRepository = $this->container->get('order.repository');
         /** @var EntitySearchResult $ordersSearchResult */
@@ -118,7 +124,7 @@ class ASControllingReportController extends AbstractController
             if($this->customerIsControlled($controlledCustomerGroup,$customer))
             {
                 //order is internal, we want to add this order to the report
-                $reportEntries = null;
+                
                 //load order address repository to compare the address with the possible cost centres
                 /** @var EntityRepositoryInterface $orderAddressRepository */
                 $orderAddressRepository = $this->container->get('order_address.repository');
@@ -130,70 +136,66 @@ class ASControllingReportController extends AbstractController
 
                 $criteria = new Criteria();
                 $costCentresSearchResult = $costCentresRepository->search($criteria, Context::createDefaultContext());
-                //iterate through all orders
-                foreach($ordersSearchResult as $orderID => $order)
+                
+                $costCentreIdentifier = null;
+                $plzMatch = false;
+                $streetMatch = false;
+
+                /** @var OrderAddressEntity $orderAddress */
+                $orderAddress = $this->getOrderAddressFromOrderID($orderAddressRepository, $orderID);
+
+                $orderStreet = $orderAddress->getStreet();
+                $orderPLZ = $orderAddress->getZipcode();
+                /** @var ASControllingCostCentreEntity $costCentre */
+                foreach($costCentresSearchResult as $costCentreID => $costCentre)
                 {
-                    $costCentreIdentifier = null;
-                    $plzMatch = false;
-                    $streetMatch = false;
-
-                    /** @var OrderAddressEntity $orderAddress */
-                    $orderAddress = $this->getOrderAddressFromOrderID($orderAddressRepository, $orderID);
-
-                    $orderStreet = $orderAddress->getStreet();
-                    $orderPLZ = $orderAddress->getZipcode();
-                    /** @var ASControllingCostCentreEntity $costCentre */
-                    foreach($costCentresSearchResult as $costCentreID => $costCentre)
+                    $centrePLZ = $costCentre->getPlz();
+                    if($centrePLZ == $orderPLZ)
                     {
-                        $centrePLZ = $costCentre->getPlz();
-                        if($centrePLZ == $orderPLZ)
-                        {
-                            $plzMatch = true;
-                        }
+                        $plzMatch = true;
+                    }
 
-                        $centreStreet = $costCentre->getStreet();
-                        $equalPosCount = similar_text($centreStreet,$orderStreet,$similarity);
+                    $centreStreet = $costCentre->getStreet();
+                    $equalPosCount = similar_text($centreStreet,$orderStreet,$similarity);
 
-                        if($similarity > .75)
-                        {
-                            $streetMatch = true;
-                        }
+                    if($similarity > .75)
+                    {
+                        $streetMatch = true;
+                    }
+                    
+                    if($plzMatch && $streetMatch)
+                    {
+                        $costCentreIdentifier = $costCentre->getCostCentreId();
                         
-                        if($plzMatch && $streetMatch)
+                        /** @var EntityRepositoryInterface $lineItemRepository */
+                        $lineItemRepository = $this->container->get('order_line_item.repository');
+                        $orderLineItems = $this->getOrderLineItemsFromOrderID($lineItemRepository, $orderID);
+                        /** @var OrderLineItemEntity $orderLineItem */
+                        foreach($orderLineItems as $orderLineItemID => $orderLineItem)
                         {
-                            $costCentreIdentifier = $costCentre->getCostCentreId();
-                            
-                            /** @var EntityRepositoryInterface $lineItemRepository */
-                            $lineItemRepository = $this->container->get('order_line_item.repository');
-                            $orderLineItems = $this->getOrderLineItemsFromOrderID($lineItemRepository, $orderID);
-                            /** @var OrderLineItemEntity $orderLineItem */
-                            foreach($orderLineItems as $orderLineItemID => $orderLineItem)
-                            {
-                                if ($orderLineItem->getIdentifier() == 'INTERNAL_DISCOUNT')
-                                    continue;
-                                $productRepository = $this->container->get('product.repository');
-                                $productID = $orderLineItem->getProductId();
-                                $productEntity = $this->getProductEntityFromID($productRepository,$productID);
-                                $reportEntries[] = 
-                                                    [
-                                                        'costCentreFROM' => '50538200',
-                                                        'costCentreTO' => $costCentreIdentifier,
-                                                        'articleNumber' => $productEntity->getProductNumber(),
-                                                        'amount' => $orderLineItem->getQuantity(),
-                                                        'unitPrice' => $orderLineItem->getUnitPrice(),
-                                                        'bookedPrice' => $orderLineItem->getQuantity()*$orderLineItem->getUnitPrice(),
-                                                        'shipmentDate' => '',
-                                                        'shipmentID' => ''
-                                                    ];
-                            }
-                            break;
+                            if ($orderLineItem->getIdentifier() == 'INTERNAL_DISCOUNT')
+                                continue;
+                            $productRepository = $this->container->get('product.repository');
+                            $productID = $orderLineItem->getProductId();
+                            $productEntity = $this->getProductEntityFromID($productRepository,$productID);
+                            $reportEntries[] = 
+                                                [
+                                                    'costCentreFROM' => '50538200',
+                                                    'costCentreTO' => $costCentreIdentifier,
+                                                    'articleNumber' => $productEntity->getProductNumber(),
+                                                    'amount' => $orderLineItem->getQuantity(),
+                                                    'unitPrice' => $orderLineItem->getUnitPrice(),
+                                                    'bookedPrice' => $orderLineItem->getQuantity()*$orderLineItem->getUnitPrice(),
+                                                    'shipmentDate' => '',
+                                                    'shipmentID' => ''
+                                                ];
                         }
+                        break;
                     }
                 }
             }
         }
-        
-        return new Response('',Response::HTTP_NO_CONTENT);
+        $this->generateReportCSV($reportEntries);
     }
     private function getOrdersOfMonth(EntityRepositoryInterface $orderRepository): EntitySearchResult
     {
@@ -253,6 +255,21 @@ class ASControllingReportController extends AbstractController
     private function customerIsControlled(string $controlledCustomerGroupID, CustomerEntity $customer): bool
     {
         return $customer->getGroupId() == $controlledCustomerGroupID ? true : false;
+    }
+    private function generateReportCSV(array $reportArray)
+    {
+        $reportString = 'Kostenstelle von;Kostenstelle an;Artikelnr.;Menge;Bewertungspreis;Buchungswert;Wert-Datum;SendungsID' . "\n";
+        foreach($reportArray as $i => $entry)
+        {
+            $reportString = $reportString . $entry['costCentreFROM'] . ';' . $entry['costCentreTO'] . ';' . $entry['articleNumber'] . ';' . $entry['amount'] . ';' . $entry['unitPrice'] . ';' . $entry['bookedPrice'] . ';' . $entry['shipmentDate'] . ';' . $entry['shipmentID'] . "\n";
+        }
+
+        if (!file_exists($this->path)) {
+            mkdir($this->path, 0777, true);
+        }
+
+        $filename = $this->path . '/' . 'ControllingReport-' . $this->createDateFromString('now') . '-' . '.csv';
+        file_put_contents($filename, $reportString);
     }
     /* Creates a timestamp that will be used to filter by this date */
     public function createDateFromString(string $daytime): string

@@ -7,10 +7,14 @@
     <services>
         <service id="ASControllingReport\Core\Api\ASControllingReportController" public="true">
             <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
-            <!-- <argument type="service" id="ASDispositionControl\Core\Utilities\MailServiceHelper" /> -->
+            <argument type="service" id="ASControllingReport\Core\Helper\MailServiceHelper" />
             <call method="setContainer">
                 <argument type="service" id="service_container" />
             </call>
+        </service>
+
+         <service id="ASControllingReport\Core\Helper\MailServiceHelper" public="true">      
+            <argument id="Shopware\Core\Content\MailTemplate\Service\MailService" type="service"/>
         </service>
 
         <service id="ASControllingReport\Core\Content\CostCentre\ASControllingCostCentreDefinition">
