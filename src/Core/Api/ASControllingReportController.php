@@ -2,8 +2,8 @@
 
 namespace ASControllingReport\Core\Api;
 
-use ASControllingReport\Core\Helper\MailServiceHelper;
 use ASControllingReport\Core\Content\CostCentre\ASControllingCostCentreEntity;
+use ASMailService\Core\MailServiceHelper;
 use DateInterval;
 use DateTime;
 use Shopware\Core\Checkout\Customer\CustomerEntity;
@@ -35,13 +35,15 @@ class ASControllingReportController extends AbstractController
     private $systemConfigService;
     /** @var MailServiceHelper $mailServiceHelper */
     private $mailServiceHelper;
-    
+    /** @var string $senderName */
+    private $senderName;
     public function __construct(SystemConfigService $systemConfigService,
                                 MailServiceHelper $mailServiceHelper)
     {
         $this->systemConfigService = $systemConfigService;
         $this->mailServiceHelper = $mailServiceHelper;
         $this->path = '../custom/plugins/ASControllingReport/Reports/';
+        $this->senderName = 'Controlling Report';
     }
 
     /**
@@ -51,7 +53,7 @@ class ASControllingReportController extends AbstractController
      */
     public function dummyRoute(Context $context): ?Response
     {
-
+        
         return new Response('',Response::HTTP_NO_CONTENT);
     }
 
@@ -98,7 +100,21 @@ class ASControllingReportController extends AbstractController
      */
     public function sendReport(Context $context): ?Response
     {
-        $this->generateReport();
+        $fallbackChannel = $this->systemConfigService->get('ASControllingReport.config.fallbackSaleschannelNotification');
+        $reportArray = $this->generateReport();
+        $filename = $this->generateReportCSV($reportArray);
+        
+        $recipientsList = $this->systemConfigService->get('ASControllingReport.config.reportRecipients');
+        $recipientsList = explode(';', $recipientsList);
+        for($i = 0; $i<count($recipientsList); $i++)
+        {
+            $name = $recipientsList[$i];
+            $i++;
+            $mail = $recipientsList[$i];
+
+            $recipients[$mail] = $name;
+        }
+        $this->mailServiceHelper->sendMyMail($recipients, $fallbackChannel, $this->senderName, 'ASControllingReport TestMail','Henlo<br>aaa','Henlo<br>aaa',[$filename]);
         return new Response('',Response::HTTP_NO_CONTENT);
     }
     private function generateReport()
@@ -195,7 +211,7 @@ class ASControllingReportController extends AbstractController
                 }
             }
         }
-        $this->generateReportCSV($reportEntries);
+        return $reportEntries;
     }
     private function getOrdersOfMonth(EntityRepositoryInterface $orderRepository): EntitySearchResult
     {
@@ -256,7 +272,7 @@ class ASControllingReportController extends AbstractController
     {
         return $customer->getGroupId() == $controlledCustomerGroupID ? true : false;
     }
-    private function generateReportCSV(array $reportArray)
+    private function generateReportCSV(array $reportArray): string
     {
         $reportString = 'Kostenstelle von;Kostenstelle an;Artikelnr.;Menge;Bewertungspreis;Buchungswert;Wert-Datum;SendungsID' . "\n";
         foreach($reportArray as $i => $entry)
@@ -268,8 +284,9 @@ class ASControllingReportController extends AbstractController
             mkdir($this->path, 0777, true);
         }
 
-        $filename = $this->path . '/' . 'ControllingReport-' . $this->createDateFromString('now') . '-' . '.csv';
+        $filename = $this->path . 'ControllingReport-' . $this->createDateFromString('now') . '-' . '.csv';
         file_put_contents($filename, $reportString);
+        return $filename;
     }
     /* Creates a timestamp that will be used to filter by this date */
     public function createDateFromString(string $daytime): string
