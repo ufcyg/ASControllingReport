@@ -8,18 +8,16 @@
         <service id="ASControllingReport\Core\Api\ASControllingReportController" public="true">
             <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
             <argument type="service" id="ASMailService\Core\MailServiceHelper" />
-            <!-- <argument type="service" id="ASControllingReport\Core\Helper\MailServiceHelper" /> -->
             <call method="setContainer">
                 <argument type="service" id="service_container" />
             </call>
         </service>
 
-         <!-- <service id="ASControllingReport\Core\Helper\MailServiceHelper" public="true">      
-            <argument id="Shopware\Core\Content\MailTemplate\Service\MailService" type="service"/>
-        </service> -->
-
         <service id="ASControllingReport\Core\Content\CostCentre\ASControllingCostCentreDefinition">
             <tag name="shopware.entity.definition" entity="as_controlling_report_cost_centres" />
+        </service>
+        <service id="ASControllingReport\Core\Content\ReportingData\ASControllingReportingDataDefinition">
+            <tag name="shopware.entity.definition" entity="as_controlling_reporting_data" />
         </service>
 
         <service id="ASControllingReport\ScheduledTask\ControllingReportTask">

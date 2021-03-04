@@ -79,6 +79,11 @@ class ASControllingReportController extends AbstractController
             $data[$c] = ['street' => 'Köpenicker Straße 325, Haus 123', 'plz' => '12555', 'costCentreId' => '50538200'];
             $c++;
         }
+        if($this->addCostCentreCk($costCentresRepository, 'Höhenstraße 24'))
+        {
+            $data[$c] = ['street' => 'Höhenstraße 24', 'plz' => '70736', 'costCentreId' => '50648200'];
+            $c++;
+        }
         if($data != null)
             $costCentresRepository->create($data,Context::createDefaultContext());
         
@@ -116,6 +121,115 @@ class ASControllingReportController extends AbstractController
         }
         $this->mailServiceHelper->sendMyMail($recipients, $fallbackChannel, $this->senderName, 'ASControllingReport TestMail','Henlo<br>aaa','Henlo<br>aaa',[$filename]);
         return new Response('',Response::HTTP_NO_CONTENT);
+    }
+    public function generateControllingEntityFromVLE(array $contentLine)
+    {
+        /** @var EntityRepositoryInterface $orderRepository */
+        $orderRepository = $this->container->get('order.repository');
+        $criteria = new Criteria();
+        $criteria->addFilter(new EqualsFilter('orderNumber', $contentLine[1]));
+
+        /** @var OrderEntity $order */
+        $order = $orderRepository->search($criteria,Context::createDefaultContext())->first();
+
+        $orderID = $order->getId();
+
+
+        $customerRepository = $this->container->get('customer.repository');
+        /** @var CustomerEntity $customer */
+        $customer = $this->getCustomerForOrder($customerRepository, $order);
+
+        /** @var string $controlledCustomerGroup */
+        $controlledCustomerGroup = $this->systemConfigService->get('ASControllingReport.config.controlledCustomerGroup');
+        if($this->customerIsControlled($controlledCustomerGroup,$customer))
+        {
+            //order is internal, we want to add this order to the report
+            
+            //load order address repository to compare the address with the possible cost centres
+            /** @var EntityRepositoryInterface $orderAddressRepository */
+            $orderAddressRepository = $this->container->get('order_address.repository');
+            //order line items are unique positions of an order
+            /** @var EntityRepositoryInterface $orderLineItemRepository */
+            $orderLineItemRepository = $this->container->get('order_line_item.repository');
+            //load list of cost centres
+            $costCentresRepository = $this->container->get('as_controlling_report_cost_centres.repository');
+
+            $criteria = new Criteria();
+            $costCentresSearchResult = $costCentresRepository->search($criteria, Context::createDefaultContext());
+            
+            $costCentreIdentifier = null;
+            $plzMatch = false;
+            $streetMatch = false;
+
+            /** @var OrderAddressEntity $orderAddress */
+            $orderAddress = $this->getOrderAddressFromOrderID($orderAddressRepository, $orderID);
+
+            $orderStreet = $orderAddress->getStreet();
+            $orderPLZ = $orderAddress->getZipcode();
+            /** @var ASControllingCostCentreEntity $costCentre */
+            foreach($costCentresSearchResult as $costCentreID => $costCentre)
+            {
+                $centrePLZ = $costCentre->getPlz();
+                if($centrePLZ == $orderPLZ)
+                {
+                    $plzMatch = true;
+                }
+
+                $centreStreet = $costCentre->getStreet();
+                $equalPosCount = similar_text($centreStreet,$orderStreet,$similarity);
+
+                if($similarity > 75)
+                {
+                    $streetMatch = true;
+                }
+                
+                if($plzMatch && $streetMatch)
+                {
+                    $entityFound = false;
+                    $costCentreIdentifier = $costCentre->getCostCentreId();
+                    
+                    /** @var EntityRepositoryInterface $lineItemRepository */
+                    $lineItemRepository = $this->container->get('order_line_item.repository');
+                    $orderLineItems = $this->getOrderLineItemsFromOrderID($lineItemRepository, $orderID);
+                    /** @var OrderLineItemEntity $orderLineItem */
+                    foreach($orderLineItems as $orderLineItemID => $orderLineItem)
+                    {
+                        if ($orderLineItem->getIdentifier() == 'INTERNAL_DISCOUNT')
+                            continue;
+                        $productRepository = $this->container->get('product.repository');
+                        $productID = $orderLineItem->getProductId();
+                        $productEntity = $this->getProductEntityFromID($productRepository,$productID);
+                        if($productEntity->getProductNumber() == $contentLine[5])
+                        {
+                            $entityFound = true;
+                            break;
+                        }
+                    }
+                    if($entityFound)
+                    {
+                        $reportEntries[] = 
+                                            [
+                                                'costCentreFrom' => '50538200',
+                                                'costCentreTo' => $costCentreIdentifier,
+                                                'articleNumber' => $productEntity->getProductNumber(),
+                                                'amount' => intval($contentLine[6]),
+                                                'unitPrice' => $orderLineItem->getUnitPrice(),
+                                                'shipmentDate' => $this->createDateFromString('now'),
+                                                'shipmentId' => $contentLine[9]
+                                            ];  
+                        break;
+                    }
+                }
+            }
+        }
+        /** @var EntityRepositoryInterface $reportingDataRepository */
+        $reportingDataRepository = $this->container->get('as_controlling_reporting_data.repository');
+        $criteria = new Criteria();
+        $criteria->addFilter(new EqualsFilter('shipmentId',$contentLine[9]));
+        $searchResult = $reportingDataRepository->search($criteria,Context::createDefaultContext());
+        if(count($searchResult) != 0)
+            return;
+        $reportingDataRepository->create($reportEntries,Context::createDefaultContext());
     }
     private function generateReport()
     {
