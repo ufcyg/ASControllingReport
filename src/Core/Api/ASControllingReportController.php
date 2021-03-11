@@ -42,7 +42,7 @@ class ASControllingReportController extends AbstractController
     {
         $this->systemConfigService = $systemConfigService;
         $this->mailServiceHelper = $mailServiceHelper;
-        $this->path = '../custom/plugins/ASControllingReport/Reports/';
+        $this->path = $this->systemConfigService->get('ASControllingReport.config.workingDirectory');
         $this->senderName = 'Controlling Report';
     }
 
