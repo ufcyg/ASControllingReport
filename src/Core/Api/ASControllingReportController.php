@@ -124,6 +124,7 @@ class ASControllingReportController extends AbstractController
     }
     public function generateControllingEntityFromVLE(array $contentLine)
     {
+        $reportEntries = null;
         /** @var EntityRepositoryInterface $orderRepository */
         $orderRepository = $this->container->get('order.repository');
         $criteria = new Criteria();
@@ -229,7 +230,8 @@ class ASControllingReportController extends AbstractController
         $searchResult = $reportingDataRepository->search($criteria,Context::createDefaultContext());
         if(count($searchResult) != 0)
             return;
-        $reportingDataRepository->create($reportEntries,Context::createDefaultContext());
+        if($reportEntries != null)
+            $reportingDataRepository->create($reportEntries,Context::createDefaultContext());
     }
     private function generateReport()
     {
