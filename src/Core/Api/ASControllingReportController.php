@@ -119,7 +119,7 @@ class ASControllingReportController extends AbstractController
 
             $recipients[$mail] = $name;
         }
-        $this->mailServiceHelper->sendMyMail($recipients, $fallbackChannel, $this->senderName, 'ASControllingReport TestMail','Henlo<br>aaa','Henlo<br>aaa',[$filename]);
+        $this->mailServiceHelper->sendMyMail($recipients, $fallbackChannel, $this->senderName, $this->senderName,'Hello<br><br>Enclosed you will find the monthly report for the eShop (www.zpmv-pmo.de) to download.<br><br>Have a nice day.','Hello<br><br>Enclosed you will find the monthly report for the eShop (www.zpmv-pmo.de) to download.<br><br>Have a nice day.',[$filename]);
         return new Response('',Response::HTTP_NO_CONTENT);
     }
     public function generateControllingEntityFromVLE(array $contentLine)
