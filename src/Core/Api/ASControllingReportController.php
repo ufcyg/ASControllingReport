@@ -3,6 +3,7 @@
 namespace ASControllingReport\Core\Api;
 
 use ASControllingReport\Core\Content\CostCentre\ASControllingCostCentreEntity;
+use ASControllingReport\Core\Content\ReportingData\ASControllingReportingDataEntity;
 use ASMailService\Core\MailServiceHelper;
 use DateInterval;
 use DateTime;
@@ -105,8 +106,26 @@ class ASControllingReportController extends AbstractController
      */
     public function sendReport(Context $context): ?Response
     {
+        // $reportArray = $this->generateReport();
         $fallbackChannel = $this->systemConfigService->get('ASControllingReport.config.fallbackSaleschannelNotification');
-        $reportArray = $this->generateReport();
+        $controllingDataRepo = $this->container->get('as_controlling_reporting_data.repository');
+
+        $reportEntities = $this->getEntitiesOfTheMonth($controllingDataRepo,'createdAt');
+        /** @var ASControllingReportingDataEntity $reportEntity */
+        foreach($reportEntities as $reportEntityID => $reportEntity)
+        {
+            $reportArray[] = 
+                                [
+                                    'costCentreFROM' => '50538200',
+                                    'costCentreTO' => $reportEntity->getCostCentreTo(),
+                                    'articleNumber' => $reportEntity->getArticleNumber(),
+                                    'amount' => $reportEntity->getAmount(),
+                                    'unitPrice' => $reportEntity->getUnitPrice(),
+                                    'bookedPrice' => $reportEntity->getBookedPrice(),
+                                    'shipmentDate' => $reportEntity->getShipmentDate(),
+                                    'shipmentID' => $reportEntity->getShipmentId()
+                                ];
+        }
         $filename = $this->generateReportCSV($reportArray);
         
         $recipientsList = $this->systemConfigService->get('ASControllingReport.config.reportRecipients');
@@ -403,6 +422,28 @@ class ASControllingReportController extends AbstractController
         $filename = $this->path . 'ControllingReport-' . $this->createDateFromString('now') . '-' . '.csv';
         file_put_contents($filename, $reportString);
         return $filename;
+    }
+    private function getEntitiesOfTheMonth(EntityRepositoryInterface $repository, string $fieldname): EntitySearchResult
+    {
+        $monthOffset = 1;
+        //define first and last day of the month
+        $firstDayUTS = mktime (0, 0, 0, intval(date("n"))-$monthOffset, 1, intval(date("Y")));
+        $lastDayUTS = mktime (0, 0, 0, intval(date("n"))-$monthOffset, cal_days_in_month(CAL_GREGORIAN, intval(date("n"))-$monthOffset, intval(date("Y"))), intval(date("Y")));
+        //generate strings to compare with entries in DB through DBAL
+        $firstDay = date("Y-m-d", $firstDayUTS);
+        $firstDay = $firstDay . " 00:00:00.000";
+        $lastDay = date("Y-m-d", $lastDayUTS);
+        $lastDay = $lastDay . " 23:59:59.999";
+        //define criteria
+        $criteria = new Criteria();
+        $criteria->addFilter(new RangeFilter($fieldname, [
+            RangeFilter::GTE => $firstDay,
+            RangeFilter::LTE => $lastDay
+        ]));
+        //search for all orders in given timeframe
+        /** @var EntitySearchResult $entities */
+        $ordersSearchResult = $repository->search($criteria, Context::createDefaultContext()); // this are all orders of the month
+        return $ordersSearchResult;
     }
     /* Creates a timestamp that will be used to filter by this date */
     public function createDateFromString(string $daytime): string

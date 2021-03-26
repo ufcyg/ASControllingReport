@@ -13,6 +13,6 @@ class ControllingReportTask extends ScheduledTask
 
     public static function getDefaultInterval(): int
     {
-        return 86400; // 24 hours
+        return 86340; // 24 hours
     }
 }

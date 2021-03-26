@@ -25,6 +25,7 @@
         </service>
         <service id="ASControllingReport\ScheduledTask\ControllingReportTaskHandler">
             <argument type="service" id="scheduled_task.repository" />
+            <argument type="service" id="ASControllingReport\Core\Api\ASControllingReportController" />
             <tag name="messenger.message_handler" />
         </service>
     </services>
