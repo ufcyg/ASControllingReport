@@ -70,6 +70,11 @@ class ASControllingReportController extends AbstractController
         $costCentresRepository = $this->container->get('as_controlling_report_cost_centres.repository'); // get 
         //costcentres
         $c = 0;
+        if($this->addCostCentreCk($costCentresRepository, 'Gubenerstraße 39'))
+        {
+            $data[$c] = ['street' => 'Gubenerstraße 39', 'plz' => '86156', 'costCentreId' => '50518200'];
+            $c++;
+        }
         if($this->addCostCentreCk($costCentresRepository, 'Hauptstraße 105'))
         {
             $data[$c] = ['street' => 'Hauptstraße 105', 'plz' => '04416', 'costCentreId' => '50528200'];
@@ -80,11 +85,77 @@ class ASControllingReportController extends AbstractController
             $data[$c] = ['street' => 'Köpenicker Straße 325, Haus 123', 'plz' => '12555', 'costCentreId' => '50538200'];
             $c++;
         }
+        if($this->addCostCentreCk($costCentresRepository, 'Turmstraße 21, Haus M Eingang O'))
+        {
+            $data[$c] = ['street' => 'Turmstraße 21, Haus M Eingang O', 'plz' => '10559', 'costCentreId' => '50548200'];
+            $c++;
+        }
+        if($this->addCostCentreCk($costCentresRepository, 'Otto-Hahn-Straße 18'))
+        {
+            $data[$c] = ['street' => 'Otto-Hahn-Straße 18', 'plz' => '76275', 'costCentreId' => '50558200'];
+            $c++;
+        }
+        if($this->addCostCentreCk($costCentresRepository, 'Pettenkoferstraße 1c'))
+        {
+            $data[$c] = ['street' => 'Pettenkoferstraße 1c', 'plz' => '87439', 'costCentreId' => '50568200'];
+            $c++;
+        }
+        if($this->addCostCentreCk($costCentresRepository, 'Celtestraße 1'))
+        {
+            $data[$c] = ['street' => 'Celtestraße 1', 'plz' => '85051', 'costCentreId' => '50588200'];
+            $c++;
+        }
+        if($this->addCostCentreCk($costCentresRepository, 'Zur Kesselschmiede 4'))
+        {
+            $data[$c] = ['street' => 'Zur Kesselschmiede 4', 'plz' => '92637', 'costCentreId' => '50618200'];
+            $c++;
+        }
         if($this->addCostCentreCk($costCentresRepository, 'Höhenstraße 24'))
         {
             $data[$c] = ['street' => 'Höhenstraße 24', 'plz' => '70736', 'costCentreId' => '50648200'];
             $c++;
         }
+        if($this->addCostCentreCk($costCentresRepository, 'Industriestraße 300 Gebäude CPK 2703'))
+        {
+            $data[$c] = ['street' => 'Industriestraße 300 Gebäude CPK 2703', 'plz' => '50354', 'costCentreId' => '50658200'];
+            $c++;
+        }
+        if($this->addCostCentreCk($costCentresRepository, 'Paracelsusstraße 13'))
+        {
+            $data[$c] = ['street' => 'Paracelsusstraße 13', 'plz' => '51375', 'costCentreId' => '50718200'];
+            $c++;
+        }
+        if($this->addCostCentreCk($costCentresRepository, 'Bayerstraße 53'))
+        {
+            $data[$c] = ['street' => 'Bayerstraße 53', 'plz' => '80335', 'costCentreId' => '50778200'];
+            $c++;
+        }
+        if($this->addCostCentreCk($costCentresRepository, 'Frillendorfer Straße 154'))
+        {
+            $data[$c] = ['street' => 'Frillendorfer Straße 154', 'plz' => '45139', 'costCentreId' => '50788200'];
+            $c++;
+        }
+        if($this->addCostCentreCk($costCentresRepository, 'Orlaweg 2'))
+        {
+            $data[$c] = ['street' => 'Orlaweg 2', 'plz' => '07743', 'costCentreId' => '50798200'];
+            $c++;
+        }
+        if($this->addCostCentreCk($costCentresRepository, 'Südstraße 7'))
+        {
+            $data[$c] = ['street' => 'Südstraße 7', 'plz' => '03130', 'costCentreId' => '50808200'];
+            $c++;
+        }
+        if($this->addCostCentreCk($costCentresRepository, 'An der Hüls 183'))
+        {
+            $data[$c] = ['street' => 'An der Hüls 183', 'plz' => '52068', 'costCentreId' => '50878200'];
+            $c++;
+        }
+        if($this->addCostCentreCk($costCentresRepository, 'Hans-Inderfurth-Straße 1'))
+        {
+            $data[$c] = ['street' => 'Hans-Inderfurth-Straße 1', 'plz' => '77933', 'costCentreId' => '50908200'];
+            $c++;
+        }
+        
         if($data != null)
             $costCentresRepository->create($data,Context::createDefaultContext());
         
