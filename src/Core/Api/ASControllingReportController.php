@@ -177,7 +177,7 @@ class ASControllingReportController extends AbstractController
      */
     public function sendReport(Context $context): ?Response
     {
-        // $reportArray = $this->generateReport();
+        $reportArray = null;
         $fallbackChannel = $this->systemConfigService->get('ASControllingReport.config.fallbackSaleschannelNotification');
         $controllingDataRepo = $this->container->get('as_controlling_reporting_data.repository');
 
@@ -197,6 +197,8 @@ class ASControllingReportController extends AbstractController
                                     'shipmentID' => $reportEntity->getShipmentId()
                                 ];
         }
+        if($reportArray == null)
+            return new Response('',Response::HTTP_NO_CONTENT);;
         $filename = $this->generateReportCSV($reportArray);
         
         $recipientsList = $this->systemConfigService->get('ASControllingReport.config.reportRecipients');
@@ -483,7 +485,7 @@ class ASControllingReportController extends AbstractController
         $reportString = 'Kostenstelle von;Kostenstelle an;Artikelnr.;Menge;Bewertungspreis;Buchungswert;Wert-Datum;SendungsID' . "\n";
         foreach($reportArray as $i => $entry)
         {
-            $reportString = $reportString . $entry['costCentreFROM'] . ';' . $entry['costCentreTO'] . ';' . $entry['articleNumber'] . ';' . $entry['amount'] . ';' . $entry['unitPrice'] . ';' . $entry['bookedPrice'] . ';' . $entry['shipmentDate'] . ';' . $entry['shipmentID'] . "\n";
+            $reportString = $reportString . $entry['costCentreFROM'] . ';' . $entry['costCentreTO'] . ';' . $entry['articleNumber'] . ';' . str_replace('.',',',$entry['amount']) . ';' . str_replace('.',',',$entry['unitPrice']) . ';' . str_replace('.',',',$entry['bookedPrice']) . ';' . str_replace(' ','_',$entry['shipmentDate']) . ';' . $entry['shipmentID'] . "\n";
         }
 
         if (!file_exists($this->path)) {
@@ -496,7 +498,7 @@ class ASControllingReportController extends AbstractController
     }
     private function getEntitiesOfTheMonth(EntityRepositoryInterface $repository, string $fieldname): EntitySearchResult
     {
-        $monthOffset = 1;
+        $monthOffset = 0;
         //define first and last day of the month
         $firstDayUTS = mktime (0, 0, 0, intval(date("n"))-$monthOffset, 1, intval(date("Y")));
         $lastDayUTS = mktime (0, 0, 0, intval(date("n"))-$monthOffset, cal_days_in_month(CAL_GREGORIAN, intval(date("n"))-$monthOffset, intval(date("Y"))), intval(date("Y")));
