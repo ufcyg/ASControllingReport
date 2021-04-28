@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace ASControllingReport\Core\Content\CostCentre;
 
@@ -31,10 +33,10 @@ class ASControllingCostCentreDefinition extends EntityDefinition
     {
         return new FieldCollection(
             [
-                (new IdField('id','id'))->addFlags(new Required(), new PrimaryKey()),
-                new StringField('street','street'),
-                new StringField('plz','plz'),
-                new StringField('cost_centre_id','costCentreId'),
+                (new IdField('id', 'id'))->addFlags(new Required(), new PrimaryKey()),
+                new StringField('street', 'street'),
+                new StringField('plz', 'plz'),
+                new StringField('cost_centre_id', 'costCentreId'),
             ]
         );
     }

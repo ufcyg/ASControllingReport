@@ -1,9 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace ASControllingReport\Core\Content\ReportingData;
 
 use Shopware\Core\Framework\DataAbstractionLayer\EntityDefinition;
-use Shopware\Core\Framework\DataAbstractionLayer\Field\DateField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\Flag\PrimaryKey;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\Flag\Required;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\FloatField;
@@ -34,14 +35,14 @@ class ASControllingReportingDataDefinition extends EntityDefinition
     {
         return new FieldCollection(
             [
-                (new IdField('id','id'))->addFlags(new Required(), new PrimaryKey()),
-                new StringField('cost_centre_from','costCentreFrom'),
-                new StringField('cost_centre_to','costCentreTo'),
-                new StringField('article_number','articleNumber'),
-                new IntField('amount','amount'),
-                new FloatField('unit_price','unitPrice'),
-                new StringField('shipment_date','shipmentDate'),
-                new StringField('shipment_id','shipmentId')
+                (new IdField('id', 'id'))->addFlags(new Required(), new PrimaryKey()),
+                new StringField('cost_centre_from', 'costCentreFrom'),
+                new StringField('cost_centre_to', 'costCentreTo'),
+                new StringField('article_number', 'articleNumber'),
+                new IntField('amount', 'amount'),
+                new FloatField('unit_price', 'unitPrice'),
+                new StringField('shipment_date', 'shipmentDate'),
+                new StringField('shipment_id', 'shipmentId')
             ]
         );
     }

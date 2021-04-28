@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace ASControllingReport\ScheduledTask;
 
@@ -9,26 +11,27 @@ use Shopware\Core\Framework\MessageQueue\ScheduledTask\ScheduledTaskHandler;
 
 
 class ControllingReportTaskHandler extends ScheduledTaskHandler
-{    
+{
     /** @var ASControllingReportController $controllingReportControler */
     private $controllingReportControler;
-    public function __construct(EntityRepositoryInterface $scheduledTaskRepository,
-                                ASControllingReportController $controllingReportControler)
-    {
+    public function __construct(
+        EntityRepositoryInterface $scheduledTaskRepository,
+        ASControllingReportController $controllingReportControler
+    ) {
         $this->controllingReportControler = $controllingReportControler;
         parent::__construct($scheduledTaskRepository);
     }
 
     public static function getHandledMessages(): iterable
     {
-        return [ ControllingReportTask::class ];
+        return [ControllingReportTask::class];
     }
 
     public function run(): void
     {
         // if today is the first of the month, send report
-        if(intval(date("n")) === 1){
+        if (intval(date("n")) === 1) {
             $this->controllingReportControler->sendReport(Context::createDefaultContext());
         }
-    }    
+    }
 }

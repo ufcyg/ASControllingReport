@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace ASControllingReport;
 
@@ -59,16 +61,14 @@ class ASControllingReport extends Plugin
         // Remove all traces of the plugin
         $dir = '../custom/plugins/ASControllingReport/Reports/';
         $it = new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS);
-        $files = new RecursiveIteratorIterator($it,
-             RecursiveIteratorIterator::CHILD_FIRST);
-        foreach($files as $file) 
-        {
-            if ($file->isDir())
-            {
+        $files = new RecursiveIteratorIterator(
+            $it,
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+        foreach ($files as $file) {
+            if ($file->isDir()) {
                 rmdir($file->getRealPath());
-            }
-            else 
-            {
+            } else {
                 unlink($file->getRealPath());
             }
         }
