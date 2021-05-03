@@ -461,13 +461,13 @@ class ASControllingReportController extends AbstractController
             mkdir($this->path, 0777, true);
         }
 
-        $filename = $this->path . 'ControllingReport-' . $this->createDateFromString('now') . '-' . '.csv';
+        $filename = $this->path . 'ControllingReport-' . $this->createDateFromString('now') . '.csv';
         file_put_contents($filename, $reportString);
         return $filename;
     }
     private function getEntitiesOfTheMonth(EntityRepositoryInterface $repository, string $fieldname): EntitySearchResult
     {
-        $monthOffset = 0;
+        $monthOffset = 1;
         //define first and last day of the month
         $firstDayUTS = mktime(0, 0, 0, intval(date("n")) - $monthOffset, 1, intval(date("Y")));
         $lastDayUTS = mktime(0, 0, 0, intval(date("n")) - $monthOffset, cal_days_in_month(CAL_GREGORIAN, intval(date("n")) - $monthOffset, intval(date("Y"))), intval(date("Y")));
