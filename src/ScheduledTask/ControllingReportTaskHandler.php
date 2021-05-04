@@ -30,7 +30,7 @@ class ControllingReportTaskHandler extends ScheduledTaskHandler
     public function run(): void
     {
         // if today is the first of the month, send report
-        if (intval(date("n")) === 1) {
+        if (intval(date("j")) === 1) {
             $this->controllingReportControler->sendReport(Context::createDefaultContext());
         }
     }
