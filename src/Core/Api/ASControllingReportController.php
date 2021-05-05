@@ -165,7 +165,6 @@ class ASControllingReportController extends AbstractController
     public function sendReport(Context $context): ?Response
     {
         $reportArray = null;
-        $fallbackChannel = $this->systemConfigService->get('ASControllingReport.config.fallbackSaleschannelNotification');
         $controllingDataRepo = $this->container->get('as_controlling_reporting_data.repository');
 
         $reportEntities = $this->getEntitiesOfTheMonth($controllingDataRepo, 'createdAt');
@@ -196,7 +195,7 @@ class ASControllingReportController extends AbstractController
 
             $recipients[$mail] = $name;
         }
-        $this->mailServiceHelper->sendMyMail($recipients, $fallbackChannel, $this->senderName, $this->senderName, 'Hello<br><br>Enclosed you will find the monthly report for the eShop (www.zpmv-pmo.de) to download.<br><br>Have a nice day.', 'Hello<br><br>Enclosed you will find the monthly report for the eShop (www.zpmv-pmo.de) to download.<br><br>Have a nice day.', [$filename]);
+        $this->mailServiceHelper->sendMyMail($recipients, null, $this->senderName, $this->senderName, 'Hello<br><br>Enclosed you will find the monthly report for the eShop (www.zpmv-pmo.de) to download.<br><br>Have a nice day.', 'Hello<br><br>Enclosed you will find the monthly report for the eShop (www.zpmv-pmo.de) to download.<br><br>Have a nice day.', [$filename]);
         return new Response('', Response::HTTP_NO_CONTENT);
     }
     public function generateControllingEntityFromVLE(array $contentLine)

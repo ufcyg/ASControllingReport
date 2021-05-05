@@ -20,12 +20,6 @@
             <entity>customer_group</entity>
             <label>Choose customer group monitored by controlling for the plugin configuration</label>
         </component>
-
-        <component name="sw-entity-single-select">
-            <name>fallbackSaleschannelNotification</name>
-            <entity>sales_channel</entity>
-            <label>Choose a fallback sales channel as origin for notifications if no other sales channel is known</label>
-        </component>
     </card>
     <card>
         <title>Working Directory</title>
